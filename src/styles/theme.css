@@ -1,0 +1,38 @@
+/* Golf-course palette, matching Theme.swift in the iOS app.
+   Every color adapts to light and dark mode. Views use these tokens only. */
+
+:root {
+  color-scheme: light dark;
+
+  --fairway: #2e7d32;    /* primary accent: buttons, icons, pay amounts */
+  --evergreen: #1b4d2e;  /* headings and totals */
+  --sand: #a86a12;       /* money leaving the kitty */
+  --card: #ffffff;       /* row background, like a white scorecard */
+  --turf-top: #e3f2df;   /* background gradient */
+  --turf-bottom: #c6e4c0;
+  --destructive: #c62828; /* the Clear button */
+
+  --text: #16241b;
+  --text-secondary: #5b6b60;
+  --separator: rgb(27 77 46 / 0.12);
+  --stripe: rgb(255 255 255 / 0.28);
+  --shadow: 0 1px 2px rgb(15 34 23 / 0.08), 0 4px 16px rgb(15 34 23 / 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fairway: #6fcf73;
+    --evergreen: #a9d8b0;
+    --sand: #e3b65e;
+    --card: #16241b;
+    --turf-top: #0f2217;
+    --turf-bottom: #0a170f;
+    --destructive: #ff6b6b;
+
+    --text: #e8f3ea;
+    --text-secondary: #9db3a3;
+    --separator: rgb(169 216 176 / 0.14);
+    --stripe: rgb(255 255 255 / 0.035);
+    --shadow: none;
+  }
+}
