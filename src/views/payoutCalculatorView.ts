@@ -1,7 +1,7 @@
 import type { PayoutViewModel } from "../viewModel/payoutViewModel";
 import { createCountStepper, type CountStepper } from "./countStepper";
 import { icons } from "./icons";
-import { kittySection, poolSection, potSection, sectionHeader } from "./results";
+import { announcement, kittySection, poolSection, potSection, sectionHeader } from "./results";
 
 /** The main screen: inputs on top, results below once there is a player. */
 export function mountPayoutCalculator(root: HTMLElement, viewModel: PayoutViewModel): void {
@@ -16,11 +16,13 @@ export function mountPayoutCalculator(root: HTMLElement, viewModel: PayoutViewMo
         <div class="rows" id="inputs"></div>
       </section>
       <p class="hint">Add players to see payouts. Tap a number to type it.</p>
-      <div id="results" aria-live="polite"></div>
+      <div id="results"></div>
+      <p class="visually-hidden" role="status" id="announcement"></p>
     </main>`;
 
   const inputs = root.querySelector<HTMLElement>("#inputs")!;
   const results = root.querySelector<HTMLElement>("#results")!;
+  const status = root.querySelector<HTMLElement>("#announcement")!;
   const hint = root.querySelector<HTMLElement>(".hint")!;
   const clear = root.querySelector<HTMLButtonElement>(".clear-button")!;
 
@@ -52,6 +54,10 @@ export function mountPayoutCalculator(root: HTMLElement, viewModel: PayoutViewMo
         poolSection("Birdies", icons.bird, "birdie", result.birdies) +
         kittySection(result)
       : "";
+    // Screen readers hear one short line per change, not every result section.
+    // Only update when it differs, so an unchanged value isn't re-announced.
+    const text = result ? announcement(result) : "";
+    if (status.textContent !== text) status.textContent = text;
   }
 
   render();

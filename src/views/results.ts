@@ -67,3 +67,8 @@ export function kittySection(result: WeeklyPayout): string {
       </div>
     </section>`;
 }
+
+/** The single line screen readers hear after each change. */
+export function announcement(result: WeeklyPayout): string {
+  return `Net kitty change: ${kittyDescription(result.netKittyChange)}`;
+}
