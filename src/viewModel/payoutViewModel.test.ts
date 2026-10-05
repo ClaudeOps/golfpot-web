@@ -24,7 +24,7 @@ describe("PayoutViewModel", () => {
     vm.subscribe(() => calls++);
     vm.set("players", 4);
     vm.reset();
-    expect(vm.hasInput).toBe(false);
+    expect(vm.canClear).toBe(false);
     expect(calls).toBe(2);
   });
 });
@@ -80,6 +80,22 @@ describe("rounding toggle", () => {
     vm.set("players", 12);
     vm.set("points", 14);
     expect(vm.result?.points.valuePerUnit).toBe(4); // back to nearest
+  });
+
+  test("clear stays available while a rounding choice is set", () => {
+    const vm = twelvePlayers();
+    vm.toggleRounding("points");
+    // Zero every count by hand: the choice is still stored, so Clear must stay usable.
+    vm.set("players", 0);
+    vm.set("points", 0);
+    vm.set("birdies", 0);
+    expect(vm.canClear).toBe(true);
+
+    vm.reset();
+    expect(vm.canClear).toBe(false);
+    vm.set("players", 12);
+    vm.set("points", 14);
+    expect(vm.result?.points.valuePerUnit).toBe(4); // nearest again
   });
 });
 

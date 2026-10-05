@@ -10,7 +10,7 @@ The app is static and stateless: no backend, no persistence, no accounts. All ma
 - For each pool:
   - If count is 0, the payout is $0 and **the whole pool goes to the kitty**.
   - Otherwise, value per unit = pool ÷ count, **rounded to the nearest dollar, halves round up**, with a **$1 minimum**.
-  - **Rounding toggle (web only):** the admin can flip either pool to the other direction: **round up** (money comes out of the kitty) or **round down** (money goes into it). The $1 minimum still applies. The choice holds while inputs change and resets to nearest on Clear. The toggle appears only when rounding up and down give different amounts, so not for an exact split, a value held at $1 either way, or a count of 0.
+  - **Rounding toggle (web only):** the admin can flip either pool to the other direction: **round up** (money comes out of the kitty) or **round down** (money goes into it). The $1 minimum still applies. The choice holds while inputs change and resets to nearest on Clear; Clear stays enabled while any pool is pinned, even with every count at 0, so a choice can't carry into the next week. The toggle appears only when rounding up and down give different amounts, so not for an exact split, a value held at $1 either way, or a count of 0.
   - Payout = value per unit × count.
   - Kitty adjustment = pool − payout. Positive means money goes into the kitty; negative means it comes out.
 - Net kitty change = the sum of both pools' adjustments.
@@ -105,6 +105,6 @@ Layer rules:
 ## Testing
 
 - `payoutCalculator.test.ts` covers every rule above: the pool split, rounding down, rounding up, a $0.50 tie, an exact split, a zero count, the $1 minimum, and the combined net kitty. A second group covers forced rounding: the direction reported by nearest, forcing up and down, a $0.50 tie rounded down, no choice for an exact split, the $1 minimum or a zero count, and each pool rounding independently.
-- `payoutViewModel.test.ts` covers the toggle: flipping and flipping back, pools toggling independently, doing nothing when there's no choice, and the choice holding until Clear.
+- `payoutViewModel.test.ts` covers the toggle: flipping and flipping back, pools toggling independently, doing nothing when there's no choice, the choice holding until Clear, and Clear staying available while a choice is set (`canClear`).
 - When changing any payout behavior, add or update tests first, then run the full suite.
 - Always run `npm run build` (which type-checks) and `npm test` before committing.
