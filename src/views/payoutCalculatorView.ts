@@ -1,4 +1,4 @@
-import type { PayoutViewModel } from "../viewModel/payoutViewModel";
+import type { PayoutViewModel, PoolName } from "../viewModel/payoutViewModel";
 import { createCountStepper, type CountStepper } from "./countStepper";
 import { icons } from "./icons";
 import { announcement, kittySection, poolSection, potSection, sectionHeader } from "./results";
@@ -44,14 +44,25 @@ export function mountPayoutCalculator(root: HTMLElement, viewModel: PayoutViewMo
     viewModel.reset();
   });
 
+  // Rounding toggles live inside #results, which re-renders, so listen on the container.
+  results.addEventListener("click", (event) => {
+    const button = (event.target as Element).closest<HTMLButtonElement>("button[data-pool]");
+    if (!button) return;
+    const pool = button.dataset.pool as PoolName;
+    const hadFocus = document.activeElement === button;
+    viewModel.toggleRounding(pool);
+    // The re-render replaced the button; keep keyboard focus on its replacement.
+    if (hadFocus) results.querySelector<HTMLButtonElement>(`button[data-pool="${pool}"]`)?.focus();
+  });
+
   function render() {
     const result = viewModel.result;
     clear.disabled = !viewModel.hasInput;
     hint.hidden = result !== null;
     results.innerHTML = result
       ? potSection(result, viewModel.entryFee) +
-        poolSection("Points", icons.flag, "point", result.points) +
-        poolSection("Birdies", icons.bird, "birdie", result.birdies) +
+        poolSection("Points", icons.flag, "point", "points", result.points) +
+        poolSection("Birdies", icons.bird, "birdie", "birdies", result.birdies) +
         kittySection(result)
       : "";
     // Screen readers hear one short line per change, not every result section.

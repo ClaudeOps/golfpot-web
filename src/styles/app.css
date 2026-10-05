@@ -175,6 +175,47 @@ body {
   color: var(--fairway);
 }
 
+.pay-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Rounding toggle beside the pay figure. Up takes from the kitty, down gives to it. */
+.round-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.round-up {
+  color: var(--sand);
+  background: color-mix(in srgb, var(--sand) 15%, transparent);
+}
+
+.round-down {
+  color: var(--fairway);
+  background: color-mix(in srgb, var(--fairway) 15%, transparent);
+}
+
+.round-up:active {
+  background: color-mix(in srgb, var(--sand) 28%, transparent);
+}
+
+.round-down:active {
+  background: color-mix(in srgb, var(--fairway) 28%, transparent);
+}
+
 /* MARK: Stepper */
 
 .stepper-controls {
@@ -229,7 +270,8 @@ body {
 }
 
 .step-button:focus-visible,
-.clear-button:focus-visible {
+.clear-button:focus-visible,
+.round-button:focus-visible {
   outline: 2px solid var(--fairway);
   outline-offset: 2px;
 }

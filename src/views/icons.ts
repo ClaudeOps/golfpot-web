@@ -39,6 +39,9 @@ export const icons = {
     `<rect x="2" y="6" width="20" height="12" rx="2" fill="currentColor"/>
      <circle cx="12" cy="12" r="2.8" fill="var(--card)"/>`,
   ),
+  /** chevron.up / chevron.down: rounding direction. Distinct from the kitty badge's circled arrows. */
+  chevronUp: svg(`<path d="M6.5 14.5 12 9l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`),
+  chevronDown: svg(`<path d="M6.5 9.5 12 15l5.5-5.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`),
   minus: svg(`<path d="M6 12h12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`),
   plus: svg(`<path d="M6 12h12M12 6v12" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`),
   /** arrow.up.circle.fill */
