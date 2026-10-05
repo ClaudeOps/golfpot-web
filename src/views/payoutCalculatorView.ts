@@ -57,7 +57,7 @@ export function mountPayoutCalculator(root: HTMLElement, viewModel: PayoutViewMo
 
   function render() {
     const result = viewModel.result;
-    clear.disabled = !viewModel.hasInput;
+    clear.disabled = !viewModel.canClear;
     hint.hidden = result !== null;
     results.innerHTML = result
       ? potSection(result, viewModel.entryFee) +

@@ -65,9 +65,16 @@ export class PayoutViewModel {
     this.notify();
   }
 
-  get hasInput(): boolean {
+  /**
+   * Whether Clear has anything to reset: a non-zero count, or a pool pinned to
+   * rounding up or down. The rounding check matters because a choice survives
+   * counts being stepped back to 0, and would otherwise carry into the next week.
+   */
+  get canClear(): boolean {
     const { players, points, birdies } = this.values;
-    return players !== 0 || points !== 0 || birdies !== 0;
+    const hasCounts = players !== 0 || points !== 0 || birdies !== 0;
+    const hasRoundingChoice = this.rounding.points !== "nearest" || this.rounding.birdies !== "nearest";
+    return hasCounts || hasRoundingChoice;
   }
 
   reset(): void {
