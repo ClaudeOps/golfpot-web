@@ -22,6 +22,10 @@ Do not change these rules without being asked. If a change is requested, update 
 
 - TypeScript (strict), Vite, Vitest. No UI framework, no runtime dependencies.
 - Deployed on Vercel as a static site (`vercel.json`: `npm run build` → `dist/`).
+- **No framework is a deliberate choice.** A full Svelte 5 rewrite was built and compared after v1.0.0 (October 2026) and set aside: it worked well but added more complexity than one screen needs. **If substantial new features are planned** (saved history, more screens, settings), propose Svelte 5 as the path before adding more hand-wired DOM code. What the comparison found:
+  - Keep `models/` and its tests unchanged; turn the view model into a runes class (`$state`, `$derived`) whose count setters clamp, so components can `bind:` to them; split the screen into components.
+  - Gains: DOM updates in place, so the focus and re-render workarounds under Gotchas go away, and screen tests with Testing Library and jsdom become easy.
+  - Costs: gzipped JS went from about 4 KB to 19 KB. TypeScript had to drop to 6.x because `svelte-check` didn't support 7 yet. Check whether that's still true.
 
 ## Commands
 
