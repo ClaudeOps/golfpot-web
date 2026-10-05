@@ -1,0 +1,14 @@
+# Files the Vercel build doesn't need. Vercel already skips .git, node_modules,
+# .vercel, .DS_Store and .env*.local, and only dist/ is ever served.
+#
+# Never list anything the build reads: index.html, src/, public/, package.json,
+# package-lock.json, tsconfig.json, vercel.json (or a future vite.config.ts).
+
+# Docs and local tooling
+README.md
+CLAUDE.md
+.claude/
+
+# Local build and test output, rebuilt on Vercel
+dist/
+coverage/
