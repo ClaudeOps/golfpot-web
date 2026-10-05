@@ -10,12 +10,13 @@ The app is static and stateless: no backend, no persistence, no accounts. All ma
 - For each pool:
   - If count is 0, the payout is $0 and **the whole pool goes to the kitty**.
   - Otherwise, value per unit = pool ÷ count, **rounded to the nearest dollar, halves round up**, with a **$1 minimum**.
+  - **Rounding toggle (web only):** the admin can flip either pool to the other direction: **round up** (money comes out of the kitty) or **round down** (money goes into it). The $1 minimum still applies. The choice holds while inputs change and resets to nearest on Clear. The toggle appears only when rounding up and down give different amounts, so not for an exact split, a value held at $1 either way, or a count of 0.
   - Payout = value per unit × count.
   - Kitty adjustment = pool − payout. Positive means money goes into the kitty; negative means it comes out.
 - Net kitty change = the sum of both pools' adjustments.
 - Reference case: $60 pool, 14 points → $4.29 → **$4 per point**, $56 paid, **$4 to kitty**.
 
-Do not change these rules without being asked. If a change is requested, update `payoutCalculator.ts` and its tests together. The iOS app (`~/Projects/xcode/GolfPot`) implements the same rules; keep the two in step.
+Do not change these rules without being asked. If a change is requested, update `payoutCalculator.ts` and its tests together. The iOS app (`~/Projects/xcode/GolfPot`) implements the same rules except the rounding toggle, which is web only for now; keep the rest in step.
 
 ## Stack
 
@@ -40,16 +41,16 @@ src/
   main.ts                     entry point; mounts the view, registers the service worker (prod only)
   models/                     pure logic and types; no DOM access
     gameRules.ts              per-player pool amounts, entry fee
-    poolResult.ts             PoolResult (one pool) and WeeklyPayout (whole week)
+    poolResult.ts             Rounding, PoolResult (one pool) and WeeklyPayout (whole week)
     payoutCalculator.ts       all payout math
     payoutCalculator.test.ts  mirrors the iOS PayoutCalculatorTests
   viewModel/
-    payoutViewModel.ts        inputs, ranges, derived result, subscribe(), formatting helpers
+    payoutViewModel.ts        inputs, rounding choices, ranges, derived result, subscribe(), formatting helpers
     payoutViewModel.test.ts
   views/                      DOM only; no business logic
     payoutCalculatorView.ts   main screen
     countStepper.ts           −/+ stepper with tap-to-type number and hold-to-repeat
-    results.ts                pot, pool and kitty sections; kitty badge
+    results.ts                pot, pool and kitty sections; kitty badge; rounding toggle
     icons.ts                  inline SVG stand-ins for the iOS SF Symbols
   styles/
     theme.css                 color tokens (light/dark), matching Theme.swift
@@ -62,12 +63,12 @@ public/
 
 Layer rules:
 - **Models** hold all game logic. They must stay pure and deterministic so they can be unit tested without a DOM.
-- **The view model** holds input state and exposes `result: WeeklyPayout | null`. It must not duplicate payout math; it calls `weeklyPayout`. Views re-render through `subscribe`.
-- **Views** read from the view model and write inputs back through `set`. No arithmetic on money in views.
+- **The view model** holds input state and each pool's rounding choice (`toggleRounding`), and exposes `result: WeeklyPayout | null`. It must not duplicate payout math; it calls `weeklyPayout`. Views re-render through `subscribe`.
+- **Views** read from the view model and write inputs back through `set`, `toggleRounding` and `reset`. No arithmetic on money in views.
 
 ## Conventions
 
-- **Money is whole dollars in plain `number`s.** Rounding uses integer math: `Math.floor((2 * amount + count) / (2 * count))`. `Math.floor` is required: JavaScript `/` does not truncate like Swift's `Int` division. `rawValuePerUnit` is fractional and for display only.
+- **Money is whole dollars in plain `number`s.** Rounding uses integer math: nearest is `Math.floor((2 * amount + count) / (2 * count))`, down is `Math.floor(amount / count)`, up is `Math.floor((amount + count - 1) / count)`. `Math.floor` is required: JavaScript `/` does not truncate like Swift's `Int` division. `rawValuePerUnit` is fractional and for display only.
 - Format currency only through `dollars()` (0 decimals) and `exactDollarsText()` (2 decimals). Kitty wording comes from `kittyDescription()`.
 - Input ranges: players `0...50`, points and birdies `0...199`. Results show only when players ≥ 1.
 - UI copy is sentence case, plain and short. No all-caps labels.
@@ -88,6 +89,7 @@ Layer rules:
 - Light and dark mode follow `prefers-color-scheme`.
 - The "Pay per point" and "Pay per birdie" figures are circled to enhance attention to the numbers.
 - The kitty badge pairs color with an arrow icon and wording, so meaning never depends on color alone.
+- The rounding toggle sits beside the circled pay figure and is labeled with the action it takes ("Round up" while the pay is rounded down). It uses `--sand` for rounding up (takes from the kitty) and `--fairway` for rounding down, and chevron icons so it isn't confused with the kitty badge's circled arrows, where up means money into the kitty.
 - The fairway background is decorative and `aria-hidden`.
 
 ## Gotchas
@@ -96,11 +98,13 @@ Layer rules:
 - **Stepper buttons** step on `pointerdown` (with hold-to-repeat) and ignore the `click` that follows. Keyboard activation arrives as a `click` with `detail === 0` and steps there. Don't add a plain click handler, or taps will count twice.
 - **Steppers are built once.** Only `#results` is re-rendered, so focus and typing survive updates.
 - **Screen reader announcements:** `#results` is not a live region, since it re-renders on every tap. A visually hidden `role="status"` element announces one line (the net kitty change, from `announcement()` in `results.ts`) and is only updated when that line changes.
+- **Rounding toggles live inside `#results`,** which is replaced on every render, so clicks are handled by one listener on `#results` (by `data-pool`). After a toggle, keyboard focus moves to the newly rendered button if the old one had it.
 - **Service worker** runs only in production builds. Vercel serves `sw.js` with `Cache-Control: no-cache` so updates are picked up. Bump `CACHE` in `sw.js` if its caching strategy changes.
 - **Icons** in `public/` are resized from the iOS app's `AppIcon.png`, which is generated by `Tools/make_app_icon.swift` in the iOS repo. Regenerate there, then resize with `sips -z <size> <size>`.
 
 ## Testing
 
-- `payoutCalculator.test.ts` covers every rule above: the pool split, rounding down, rounding up, a $0.50 tie, an exact split, a zero count, the $1 minimum, and the combined net kitty.
+- `payoutCalculator.test.ts` covers every rule above: the pool split, rounding down, rounding up, a $0.50 tie, an exact split, a zero count, the $1 minimum, and the combined net kitty. A second group covers forced rounding: the direction reported by nearest, forcing up and down, a $0.50 tie rounded down, no choice for an exact split, the $1 minimum or a zero count, and each pool rounding independently.
+- `payoutViewModel.test.ts` covers the toggle: flipping and flipping back, pools toggling independently, doing nothing when there's no choice, and the choice holding until Clear.
 - When changing any payout behavior, add or update tests first, then run the full suite.
 - Always run `npm run build` (which type-checks) and `npm test` before committing.

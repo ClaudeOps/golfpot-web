@@ -29,6 +29,60 @@ describe("PayoutViewModel", () => {
   });
 });
 
+describe("rounding toggle", () => {
+  const twelvePlayers = () => {
+    const vm = new PayoutViewModel();
+    vm.set("players", 12);
+    vm.set("points", 14); // $60 / 14 = $4.29, nearest rounds down
+    vm.set("birdies", 5); // $24 / 5 = $4.80, nearest rounds up
+    return vm;
+  };
+
+  test("flips each pool away from nearest and back", () => {
+    const vm = twelvePlayers();
+    vm.toggleRounding("points");
+    expect(vm.result?.points.valuePerUnit).toBe(5);
+    expect(vm.result?.points.rounded).toBe("up");
+    vm.toggleRounding("points");
+    expect(vm.result?.points.valuePerUnit).toBe(4);
+
+    vm.toggleRounding("birdies");
+    expect(vm.result?.birdies.valuePerUnit).toBe(4);
+    expect(vm.result?.birdies.rounded).toBe("down");
+  });
+
+  test("pools toggle independently", () => {
+    const vm = twelvePlayers();
+    vm.toggleRounding("points");
+    expect(vm.result?.points.rounded).toBe("up");
+    expect(vm.result?.birdies.rounded).toBe("up"); // still nearest
+  });
+
+  test("does nothing when there is no choice", () => {
+    const vm = twelvePlayers();
+    vm.set("birdies", 4); // $24 / 4 = $6 exactly
+    let calls = 0;
+    vm.subscribe(() => calls++);
+    vm.toggleRounding("birdies");
+    expect(calls).toBe(0);
+    expect(vm.result?.birdies.valuePerUnit).toBe(6);
+  });
+
+  test("choice survives input changes until clear", () => {
+    const vm = twelvePlayers();
+    vm.toggleRounding("points"); // now rounding up
+    vm.set("points", 13); // $60 / 13 = $4.62
+    expect(vm.result?.points.valuePerUnit).toBe(5);
+    vm.set("points", 11); // $60 / 11 = $5.45, nearest would give $5
+    expect(vm.result?.points.valuePerUnit).toBe(6);
+
+    vm.reset();
+    vm.set("players", 12);
+    vm.set("points", 14);
+    expect(vm.result?.points.valuePerUnit).toBe(4); // back to nearest
+  });
+});
+
 describe("formatting", () => {
   test("whole and exact dollars", () => {
     expect(dollars(56)).toBe("$56");

@@ -2,7 +2,7 @@
 // fixed string, so building them as HTML strings is safe.
 
 import type { PoolResult, WeeklyPayout } from "../models/poolResult";
-import { dollars, exactDollarsText, kittyDescription } from "../viewModel/payoutViewModel";
+import { dollars, exactDollarsText, kittyDescription, type PoolName } from "../viewModel/payoutViewModel";
 import { icons } from "./icons";
 
 export function sectionHeader(title: string, icon: string): string {
@@ -34,8 +34,30 @@ export function potSection(result: WeeklyPayout, entryFee: number): string {
     </section>`;
 }
 
-/** Breakdown for one pool. The pay figure is circled, like a birdie on a scorecard. */
-export function poolSection(title: string, icon: string, unitName: string, result: PoolResult): string {
+/**
+ * Switches the pool to the other rounding direction. The label names the action, so it
+ * reads "Round up" while the pay is rounded down. Colors match the kitty badge: rounding
+ * up takes from the kitty (sand), rounding down gives to it (fairway).
+ */
+function roundingButton(pool: PoolName, unitName: string, rounded: "up" | "down"): string {
+  const target = rounded === "up" ? "down" : "up";
+  const icon = target === "up" ? icons.chevronUp : icons.chevronDown;
+  const effect = target === "up" ? "takes from kitty" : "gives to kitty";
+  return `<button type="button" class="round-button round-${target}" data-pool="${pool}"
+            aria-label="Round pay per ${unitName} ${target}, ${effect}">${icon}Round ${target}</button>`;
+}
+
+/**
+ * Breakdown for one pool. The pay figure is circled, like a birdie on a scorecard, and
+ * has a rounding toggle beside it whenever rounding up and down give different amounts.
+ */
+export function poolSection(
+  title: string,
+  icon: string,
+  unitName: string,
+  pool: PoolName,
+  result: PoolResult,
+): string {
   const id = `${unitName}-header`;
   const details =
     result.count === 0
@@ -43,7 +65,13 @@ export function poolSection(title: string, icon: string, unitName: string, resul
       : [
           row("Count", String(result.count)),
           result.rawValuePerUnit === null ? "" : row(`Exact per ${unitName}`, exactDollarsText(result.rawValuePerUnit)),
-          row(`Pay per ${unitName}`, `<span class="pay-value">${dollars(result.valuePerUnit)}</span>`),
+          row(
+            `Pay per ${unitName}`,
+            `<span class="pay-controls">
+               ${result.rounded ? roundingButton(pool, unitName, result.rounded) : ""}
+               <span class="pay-value">${dollars(result.valuePerUnit)}</span>
+             </span>`,
+          ),
           row("Total payout", dollars(result.payout)),
         ].join("");
 

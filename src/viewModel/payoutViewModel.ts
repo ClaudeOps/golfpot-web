@@ -1,8 +1,9 @@
 import { entryFee, standardRules, type GameRules } from "../models/gameRules";
 import { weeklyPayout } from "../models/payoutCalculator";
-import type { WeeklyPayout } from "../models/poolResult";
+import { nearestRounding, type PoolRounding, type WeeklyPayout } from "../models/poolResult";
 
 export type InputField = "players" | "points" | "birdies";
+export type PoolName = "points" | "birdies";
 
 export interface Range {
   readonly min: number;
@@ -25,6 +26,8 @@ export function clamp(value: number, range: Range): number {
 /** Holds input state and derives the result. Views subscribe to be told when it changes. */
 export class PayoutViewModel {
   private values: Record<InputField, number> = { players: 0, points: 0, birdies: 0 };
+  /** Starts at nearest-dollar rounding; a toggle pins a pool to up or down until Clear. */
+  private rounding: PoolRounding = nearestRounding;
   private listeners = new Set<() => void>();
 
   constructor(readonly rules: GameRules = standardRules) {}
@@ -48,7 +51,18 @@ export class PayoutViewModel {
   get result(): WeeklyPayout | null {
     const { players, points, birdies } = this.values;
     if (players < 1) return null;
-    return weeklyPayout(players, points, birdies, this.rules);
+    return weeklyPayout(players, points, birdies, this.rules, this.rounding);
+  }
+
+  /**
+   * Switches a pool to the other rounding direction: up (money from the kitty)
+   * or down (money to the kitty). Does nothing when the pool has no choice to make.
+   */
+  toggleRounding(pool: PoolName): void {
+    const current = this.result?.[pool].rounded;
+    if (!current) return;
+    this.rounding = { ...this.rounding, [pool]: current === "up" ? "down" : "up" };
+    this.notify();
   }
 
   get hasInput(): boolean {
@@ -58,6 +72,7 @@ export class PayoutViewModel {
 
   reset(): void {
     this.values = { players: 0, points: 0, birdies: 0 };
+    this.rounding = nearestRounding;
     this.notify();
   }
 
