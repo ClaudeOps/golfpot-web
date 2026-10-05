@@ -1,4 +1,29 @@
+# Dependencies and build output
 node_modules/
 dist/
+coverage/
+*.tsbuildinfo
+
+# Vercel CLI link and local build output
 .vercel/
+
+# Environment files (Vite loads .env*; *.local holds secrets and per-machine values)
+.env
+.env.*
+!.env.example
+*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Claude Code personal settings (launch.json stays shared)
+.claude/settings.local.json
+
+# Editors and OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sw?
 .DS_Store
+Thumbs.db
